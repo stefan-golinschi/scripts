@@ -3,14 +3,15 @@
 ############### GLOBAL SETTINGS ###############
 #                User editable                #
 ################################################
-ssh_host="homeserver-lan"
+ssh_host="$1"
 remote_dir="/root/homeserver"
-local_temp_dir="/opt/Datastore/backups/homeserver/backup"
+local_backup_dir="/opt/Datastore/backups/${ssh_host}"
+local_temp_dir="${local_backup_dir}/backup"
 local_archive_basename="homeserver"
 local_archive_extension="tar.xz"
 archive_digest_extension="md5"
-local_backup_dir="/opt/Datastore/backups/homeserver"
-retention_period_days="90"
+retention_period_days="30"
+num_threads=2
 ################################################
 
 ### Dynamic Settings ###
@@ -27,11 +28,12 @@ rsync_uri="${ssh_host}:${remote_dir}/"
 mkdir -p ${local_temp_dir}
 
 echo "Fetching remote backup data. This may take a while..."
+echo "rsync ${rsync_options} ${rsync_uri} ${local_temp_dir}/"
 rsync ${rsync_options} ${rsync_uri} ${local_temp_dir}/
 echo "Remote backup data transferred."
 
 echo "Creating tar archive. This will take a while..."
-tar -C ${local_temp_dir}/../ -c -I"pxz -9" -f ${archive_tar_filename} $(basename ${local_temp_dir})
+tar -C ${local_temp_dir}/../ -c -I"pxz -9 -T${num_threads}" -f ${archive_tar_filename} $(basename ${local_temp_dir})
 echo "Archive created: ${archive_tar_filename}."
 
 echo "tar -C ${local_temp_dir}/../ -c -I"pxz -9" -f ${archive_tar_filename} $(basename ${local_temp_dir})"
@@ -40,5 +42,5 @@ echo $digest > $archive_digest_filename
 echo "Digest: ${archive_digest_filename}"
 
 echo "Remove files older than ${retention_period_days}"
-find "${local_backup_dir}/${local_archive_basename}*" -type f -mtime +${retention_period_days} -exec rm -v {} \;
+find ${local_backup_dir}/${local_archive_basename}* -type f -mtime +${retention_period_days} -exec rm -v {} \;
 echo "Deleted all files older than ${retention_period_days} days (if any)."
