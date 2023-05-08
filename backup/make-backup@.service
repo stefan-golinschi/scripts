@@ -1,0 +1,12 @@
+[Unit]
+Description=Homeserver Backup Service
+After=network.target
+
+[Service]
+Type=oneshot
+ExecStart=/home/stefan.golinschi/workspace/scripts/backup/make-backup.pull.sh %i
+User=stefan.golinschi
+Group=stefan.golinschi
+
+[Install]
+WantedBy=multi-user.target
