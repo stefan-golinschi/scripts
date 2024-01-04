@@ -48,6 +48,7 @@ def pretty_print(reg_dict: dict):
 
 
 def save_registry_keys(system_hive: str, bt_adapter_col: str):
+    bt_adapter_col = bt_adapter_col.lower()
     bt_adapter_hex = bt_adapter_col.replace(":", "")
     registry_path = f"ControlSet001\\Services\\BTHPORT\\Parameters\\Keys\\{
         bt_adapter_hex}"
@@ -62,7 +63,7 @@ def save_registry_keys(system_hive: str, bt_adapter_col: str):
                           "-x",
                           system_hive,
                           "HKEY_LOCAL_MACHINE\\SYSTEM",
-                          registry_path, default_output_location], stdout=subprocess.DEVNULL)
+                          registry_path, default_output_location])
 
 
 def main():
