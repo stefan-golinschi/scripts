@@ -3,22 +3,10 @@ import subprocess
 import os
 import argparse
 import sys
+import utils
 
 # Defaults
 default_output_location = "output.reg.temp"
-
-
-def hex_to_colon(string: str) -> str:
-    string_len = len(string)
-    out_string = ""
-    for i in range(0, string_len, 2):
-        out_string = out_string + f"{string[i]}{string[i+1]}"
-
-        if i+2 == string_len:
-            break
-        out_string = out_string + ":"
-
-    return out_string
 
 
 def parse_registry_file() -> dict:
@@ -33,18 +21,15 @@ def parse_registry_file() -> dict:
         match = mac_pattern.search(line)
         if match:
             mac_address = match.group(1)
-            mac_address = hex_to_colon(mac_address)
+            mac_address = utils.hex_to_colon(mac_address)
+            mac_address = mac_address.upper()
             hex_values = match.group(2)
             hex_values = hex_values.replace(",", "")
+            hex_values = hex_values.upper()
 
             ret_dict[mac_address] = hex_values
 
     return ret_dict
-
-
-def pretty_print(reg_dict: dict):
-    for item in reg_dict:
-        print(f"[{item}]: Key= {reg_dict[item]}")
 
 
 def save_registry_keys(system_hive: str, bt_adapter_col: str):
@@ -66,6 +51,21 @@ def save_registry_keys(system_hive: str, bt_adapter_col: str):
                           registry_path, default_output_location])
 
 
+def update_localkeys_info(keystore: dict, bt_adapter_col: str):
+    bluetooth_path = "/var/lib/bluetooth"
+    print("")
+    for item in keystore:
+
+        device_path = os.path.join(
+            bluetooth_path, bt_adapter_col, item, 'info')
+
+        if not os.path.exists(device_path):
+            continue
+
+        # Replace existing devices' key
+        print(f"You need to update: {device_path} Key={keystore[item]}")
+
+
 def main():
     parser = argparse.ArgumentParser(
         description="Get bluetooth keys from Windows registry")
@@ -80,7 +80,9 @@ def main():
     save_registry_keys(
         system_hive=args.hive_file, bt_adapter_col=args.mac_address)
     results = parse_registry_file()
-    pretty_print(results)
+    utils.pretty_print(results)
+
+    update_localkeys_info(results, args.mac_address)
 
     # Cleanup
     os.remove(default_output_location)
