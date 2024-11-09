@@ -1,0 +1,19 @@
+#!/bin/bash
+
+if [ $UID -ne 0 ]; then
+    echo "You must run this script as root."
+    exit 1
+fi
+
+NEXT_BOOT='Microsoft'
+
+YOUR_SCRIPT_HERE '${NEXT_BOOT}'
+
+echo "Next boot set to ${NEXT_BOOT}."
+
+read -p "Reboot system? (y/n): " choice
+case "$choice" in 
+  y|Y ) echo "Rebooting..."; reboot;;
+  n|N ) echo "Reboot canceled.";;
+  * ) echo "Invalid input. Please enter y or n.";;
+esac
